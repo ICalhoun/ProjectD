@@ -13,6 +13,8 @@ void readFile(char*,char*,int*);
 int stringCompare(char*, char*);
 void executeProgram(char*);
 void terminate();
+void writeSector(char*, int);
+
 
 int main()
 {
@@ -109,7 +111,11 @@ void handleInterrupt21(int ax, int bx, int cx, int dx)
     {
       terminate();
     }
-     else
+  else if(ax == 6)
+    {
+      writeSector(bx, cx);
+    }
+  else
     {
       printString("that is an incorrect call");
     }
@@ -212,4 +218,11 @@ void terminate()
   executeProgram(shellname);
   
   while(1);
+}
+
+void writeSector(char* buffer, int sector)
+{
+  int relative_sec = sector + 1, track= 0, head=0;
+
+  interrupt(0x13, 3*256+1, buffer, track*256+relative_sec, head*256+0x80);
 }
