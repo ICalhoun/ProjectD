@@ -1,4 +1,3 @@
-
 /* Ian Calhoun
    Sean Butrica
    COMP 350-003
@@ -17,6 +16,7 @@ void terminate();
 void writeSector(char*, int);
 void deleteFile(char*);
 void writeFile(char*, char*,int);
+
 
 
 int main()
@@ -232,13 +232,13 @@ void terminate()
   while(1);
 }
 
-
 void writeSector(char* buffer, int sector)
 {
   int relative_sec = sector + 1, track= 0, head=0;
 
   interrupt(0x13, 3*256+1, buffer, track*256+relative_sec, head*256+0x80);
 }
+
 
 
 void deleteFile(char* filename)
