@@ -53,11 +53,15 @@ int main()
 	    }
 	  syscall(0, filename);
 	}
-	  temp[0] = 0xa;
+      temp[0] = 0xa;
 	  temp[1] = 0xd;
 	  temp[2] = 0x0;
 	  syscall(0, temp);
-	
+	  
+    }
+  else if((line [0] == 'd')&&(line[1] == 'e')&&(line[2] == 'l'))
+    {
+      syscall(7, line+4);
     }
 }
 

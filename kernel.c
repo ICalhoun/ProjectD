@@ -1,3 +1,4 @@
+
 /* Ian Calhoun
    Sean Butrica
    COMP 350-003
@@ -14,11 +15,14 @@ int stringCompare(char*, char*);
 void executeProgram(char*);
 void terminate();
 void writeSector(char*, int);
+void deleteFile(char*);
+void writeFile(char*, char*,int);
 
 
 int main()
 {
   makeInterrupt21();
+  interrupt(0x21, 8, "this is a test message", "testmg", 3);
   interrupt(0x21, 4, "shell", 0, 0);
   while(1);
 }
@@ -114,6 +118,14 @@ void handleInterrupt21(int ax, int bx, int cx, int dx)
   else if(ax == 6)
     {
       writeSector(bx, cx);
+    }
+  else if(ax == 7)
+    {
+      deleteFile(bx);
+    }
+  else if(ax == 8)
+    {
+      writeFile(bx,cx,dx);
     }
   else
     {
@@ -220,9 +232,87 @@ void terminate()
   while(1);
 }
 
+
 void writeSector(char* buffer, int sector)
 {
   int relative_sec = sector + 1, track= 0, head=0;
 
   interrupt(0x13, 3*256+1, buffer, track*256+relative_sec, head*256+0x80);
 }
+
+
+void deleteFile(char* filename)
+{
+  char dir[512], map[512], temp[6];
+  int i, j, match = 0, count = 6;
+  
+  readSector(dir, 2);
+  readSector(map, 3);
+  
+  for(i = 0; i <=512; i =  i + 32)
+    {
+      if(dir[i] != 0)
+	{
+	  for(j = 0; j < 6; j++)
+	    {
+	      temp[j] = dir[i+j];
+	    }
+	}
+      match = stringCompare(temp, filename);
+      if(match != 0)
+	{
+	  while(dir[i+count] != 0x0)
+	    {
+	      map[dir[i+count]] = 0x0;
+	      count = count + 1;
+	    }
+	  dir[i] = 0x0;
+	  writeSector(dir,2);
+	  writeSector(map,3);
+	}
+    }
+}
+
+void writeFile(char* buffer, char* filename, int numberOfSectors)
+{
+  char map[512], dir[512], tempName[10];
+  int i, j,k, l,m, isMatch,count = 6;
+  readSector(map, 3);
+  readSector(dir, 2);
+
+  for(i = 0; i < 512; i = i + 32)
+    {
+      if(dir[i] == '\0')
+	{
+	  for(j = 0; j < 6; j++)
+	    {
+	      dir[i+j] = filename[j];
+	    }
+	  break;
+	}
+    }
+
+  for(l = 0; l < numberOfSectors;l++)
+    {
+      for(k = 3; k < 512; k++)
+	{
+	  if(map[k] == 0x0)
+	    {
+	      map[k] = 0xFF;
+	      dir[i+count] = k;
+	      count = count + 1;
+	      writeSector(buffer,k);
+	    }
+	}
+    }
+
+  for(m = numberOfSectors; m <32; m++)
+    {
+      dir[i+m+6] = '\0';
+    }
+  
+  writeSector(map, 3);
+  writeSector(dir, 2);
+}
+
+
