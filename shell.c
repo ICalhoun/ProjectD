@@ -111,10 +111,13 @@ int main()
 	      if(doc[j] != 0x0)
 		{
 		  buffer[count+j] = doc[j];
-		  }
+		}
 	      else
 		{
 		  count = count + j;
+		  buffer[count+1] = 0xa;
+		  buffer[count + 2] = 0xd;
+		  buffer[count +3] = 0x0;
 		  break;
 		}
 	    }
