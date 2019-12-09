@@ -99,29 +99,39 @@ int main()
     {
       int offset = 7;
       count = 0;
-      syscall(0, ">>>>");
-      
       while(1)
 	{
-	  for(i = 0; i < 83; i ++)
-	    doc[i] = 0x0;
-	  syscall(1,doc);
-	  if(doc[2] == 0x0)
+	  for(i = 0; i < 83; i++)
+	    {
+	      doc[i] = 0x0;
+	    }
+	  syscall(1, doc);
+	  for(j = 0; j < 83; j++)
+	    {
+	      if(doc[j] != 0x0)
+		{
+		  buffer[count+j] = doc[j];
+		  }
+	      else
+		{
+		  count = count + j;
+		  break;
+		}
+	    }
+	  
+	  if(doc[0] == 0x0)
 	    {
 	      break;
 	    }
-	  else
-	    {
-	      for(count = 0; count < 83; count++)
-		{
-		  while(doc[count] != 0x0)
-		    {
-		      buffer[count+offset] = doc[count];
-		    }
-		  offset = offset+count;
-		}
-	    }
 	}
-      syscall(8, buffer, line+7, count/512);
+      if(count/512 <= 1)
+	{
+	  sectorsRead = 1;
+	}
+      else
+	{
+	  sectorsRead = count/512;
+	}
+      syscall(8, buffer, line+offset, sectorsRead);
     }
 }
