@@ -22,7 +22,6 @@ void writeFile(char*, char*,int);
 int main()
 {
   makeInterrupt21();
-  interrupt(0x21, 8, "this is a test message", "testmg", 3);
   interrupt(0x21, 4, "shell", 0, 0);
   while(1);
 }
@@ -247,7 +246,7 @@ void deleteFile(char* filename)
   int i, j, match = 0, count = 6;
   
   readSector(dir, 2);
-  readSector(map, 3);
+  readSector(map, 1);
   
   for(i = 0; i <=512; i =  i + 32)
     {
@@ -261,58 +260,59 @@ void deleteFile(char* filename)
       match = stringCompare(temp, filename);
       if(match != 0)
 	{
+	  dir[i] = 0x0;
 	  while(dir[i+count] != 0x0)
 	    {
 	      map[dir[i+count]] = 0x0;
 	      count = count + 1;
 	    }
-	  dir[i] = 0x0;
-	  writeSector(dir,2);
-	  writeSector(map,3);
 	}
     }
+  writeSector(dir,2);
+  writeSector(map,1);
 }
 
 void writeFile(char* buffer, char* filename, int numberOfSectors)
 {
   char map[512], dir[512], tempName[10];
-  int i, j,k, l,m, isMatch,count = 6;
-  readSector(map, 3);
+  int i, j, k, l, m, count = 6;
+
+  readSector(map, 1);
   readSector(dir, 2);
 
   for(i = 0; i < 512; i = i + 32)
     {
-      if(dir[i] == '\0')
+      if(dir[i] == 0x0)
 	{
 	  for(j = 0; j < 6; j++)
 	    {
-	      dir[i+j] = filename[j];
+	      if(filename[j] != 0x0)
+		{
+		  dir[i+j] = filename[j];
+		}
+	      else
+		{
+		  dir[i+j] = 0x0;
+		}
 	    }
-	  break;
-	}
+	      break;
+	    }
     }
-
-  for(l = 0; l < numberOfSectors;l++)
+  for(l = 0; l < numberOfSectors; l++)
     {
-      for(k = 3; k < 512; k++)
+      for(k = 3; k <= 512; k++)
 	{
-	  if(map[k] == 0x0)
+	  if(map[k] == 0)
 	    {
 	      map[k] = 0xFF;
 	      dir[i+count] = k;
-	      count = count + 1;
 	      writeSector(buffer,k);
+	      buffer = buffer + 512;
+	      count = count + 1;
+	      break;
 	    }
 	}
     }
-
-  for(m = numberOfSectors; m <32; m++)
-    {
-      dir[i+m+6] = '\0';
-    }
-  
-  writeSector(map, 3);
+  writeSector(map, 1);
   writeSector(dir, 2);
 }
-
-
